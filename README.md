@@ -12,7 +12,7 @@ Welcome to my GitHub! I'm a passionate and experienced **Web Developer** with ov
 
 ## 📈 Highlights
 - ✅ 200+ successful projects delivered
-- 🌎 Global clientele (US, UK, NZ, UAE, and more)
+- 🌎 Global clients (US, UK, NZ, UAE, and more)
 - 🕓 Available for freelance, long-term and agency partnerships
 - 🏆 Known for timely delivery, great communication and quality results
 
