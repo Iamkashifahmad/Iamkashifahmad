@@ -17,6 +17,8 @@ Welcome to my GitHub! I'm a passionate and experienced **Web Developer** with ov
 - 🏆 Known for timely delivery, great communication and quality results
 
 ## 📂 Featured Projects
+- [Supremco, LLC](https://supremco.com/)
+- [MASS Psychotherapy & Counselling Services] (https://masscounselling.com/)
 - [Addiction Helpline America](http://addictionhelplineamerica.com/)
 - [Addiction Ends Now](https://addictionendsnow.com/)
 - [ProteinBench - Affiliate Website](https://proteinbench.com/)
@@ -27,7 +29,7 @@ I’m currently open to new projects and collaborations!
 
 - 💼 [Fiverr](https://fiverr.com/iamkashifahmad)
 - 💻 [Upwork](https://www.upwork.com/freelancers/kashifahmad)
-- 🌐 [Portfolio Website](https://www.mokbiz.com/kashif-ahmad/)
+- 🌐 [Portfolio](https://www.behance.net/iamkashifahmad)
 - 📧 Email: [iamkashifahmad@gmail.com](mailto:iamkashifahmad@gmail.com)
 - 🔗 [LinkedIn](https://www.linkedin.com/in/iamkashifahmad/)
 - 📲 [WhatsApp Me](https://wa.me/923433615809)
