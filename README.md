@@ -18,8 +18,10 @@ Welcome to my GitHub! I'm a passionate and experienced **Web Developer** with ov
 
 ## 📂 Featured Projects
 - [Supremco, LLC](https://supremco.com/)
-- [MASS Psychotherapy & Counselling Services] (https://masscounselling.com/)
+- [Renewed Mind Therapy](https://renewedmindtherapy.ca/)
+- [MASS Psychotherapy & Counselling Services](https://masscounselling.com/)
 - [Addiction Helpline America](http://addictionhelplineamerica.com/)
+- [Fitness Fine](https://fitnessfine.com/)
 - [Addiction Ends Now](https://addictionendsnow.com/)
 - [ProteinBench - Affiliate Website](https://proteinbench.com/)
 - [Mensah Psycho Therapy](http://mensahpsychotherapy.com/)
