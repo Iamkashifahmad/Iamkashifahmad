@@ -308,10 +308,113 @@
             });
         }
 
-        // Auto-connect logic
-        if (window.showOpenFilePicker) {
-            document.getElementById('dbSetupModal').classList.remove('hidden');
-            document.getElementById('dbSetupModal').classList.add('modal-open');
+        // ==========================================
+        // AUTO-CONNECT LOGIC (Fixed: persists across reloads)
+        // ==========================================
+        // On page load, automatically reconnect to the previously linked database
+        // without asking the user again. Uses requestPermission() which auto-grants
+        // in Chrome 86+ when permission was previously granted.
+
+        async function autoConnect() {
+            if (!window.showOpenFilePicker) {
+                showDbSetupModal();
+                return;
+            }
+
+            try {
+                const handle = await getFileHandleFromIDB();
+                if (!handle) {
+                    // No saved handle — first time use or cleared storage
+                    showDbSetupModal();
+                    return;
+                }
+
+                fileHandle = handle;
+                const opts = { mode: 'readwrite' };
+
+                // Step 1: Check current permission state
+                let permission;
+                try {
+                    permission = await fileHandle.queryPermission(opts);
+                } catch (e) {
+                    console.error('queryPermission error:', e);
+                    showDbSetupModal();
+                    return;
+                }
+
+                // Step 2: If permission is 'prompt', request it.
+                // Chrome 86+ auto-grants without a prompt if previously granted.
+                if (permission === 'prompt') {
+                    try {
+                        permission = await fileHandle.requestPermission(opts);
+                    } catch (e) {
+                        console.log('requestPermission could not auto-grant:', e);
+                        // Fall through — will show modal below
+                    }
+                }
+
+                // Step 3: If permission is granted, load the database
+                if (permission === 'granted') {
+                    try {
+                        await loadDBFromFile();
+                        closeDbSetup();
+                        updateDbStatus(true);
+                        initApp();
+                        return; // Success — no modal needed
+                    } catch (err) {
+                        // File might have been deleted, moved, or corrupted
+                        console.error('Error loading DB file on auto-connect:', err);
+                        showToast('Database file could not be loaded. Please reconnect.', 'error');
+                        fileHandle = null;
+                        // Clear the invalid handle from IDB
+                        clearFileHandleFromIDB();
+                    }
+                }
+
+                // Step 4: Auto-connect failed — show the setup modal
+                // This only happens if:
+                //   - Permission was revoked by the browser
+                //   - The file was deleted or corrupted
+                //   - requestPermission could not auto-grant
+                showDbSetupModal();
+            } catch (e) {
+                console.error('Auto-connect error:', e);
+                showDbSetupModal();
+            }
+        }
+
+        function showDbSetupModal() {
+            const modal = document.getElementById('dbSetupModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('modal-open');
+        }
+
+        function getFileHandleFromIDB() {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open('crm_file_db', 1);
+                    request.onupgradeneeded = e => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('handles')) db.createObjectStore('handles');
+                    };
+                    request.onsuccess = e => {
+                        const db = e.target.result;
+                        const tx = db.transaction('handles', 'readonly');
+                        const store = tx.objectStore('handles');
+                        store.get('fileHandle').onsuccess = (event) => {
+                            resolve(event.target.result || null);
+                        };
+                        store.get('fileHandle').onerror = () => resolve(null);
+                    };
+                    request.onerror = () => resolve(null);
+                } catch (e) {
+                    console.error('IDB read error:', e);
+                    resolve(null);
+                }
+            });
+        }
+
+        function clearFileHandleFromIDB() {
             try {
                 const request = indexedDB.open('crm_file_db', 1);
                 request.onupgradeneeded = e => {
@@ -320,26 +423,16 @@
                 };
                 request.onsuccess = e => {
                     const db = e.target.result;
-                    const tx = db.transaction('handles', 'readonly');
-                    const store = tx.objectStore('handles');
-                    store.get('fileHandle').onsuccess = async (event) => {
-                        if (event.target.result) {
-                            fileHandle = event.target.result;
-                            const opts = { mode: 'readwrite' };
-                            if ((await fileHandle.queryPermission(opts)) === 'granted') {
-                                await loadDBFromFile();
-                                closeDbSetup();
-                                updateDbStatus(true);
-                                initApp();
-                            }
-                        }
-                    };
+                    const tx = db.transaction('handles', 'readwrite');
+                    tx.objectStore('handles').delete('fileHandle');
                 };
-            } catch(e) { console.error("IDB Error:", e); }
-        } else {
-            document.getElementById('dbSetupModal').classList.remove('hidden');
-            document.getElementById('dbSetupModal').classList.add('modal-open');
+            } catch (e) {
+                console.error('IDB clear error:', e);
+            }
         }
+
+        // Start auto-connect on page load
+        autoConnect();
 
         async function createDatabase() {
             try {
@@ -378,6 +471,7 @@
 
         function updateDbStatus(isFile) {
             const dot = document.getElementById('db-status-dot'); const text = document.getElementById('db-status-text');
+            if (!dot || !text) return; // Safety check if status elements don't exist
             if (isFile) { dot.className = 'w-2 h-2 bg-green-500 rounded-full'; text.innerText = 'Connected to Folder'; text.className = 'text-green-500 text-xs'; }
             else { dot.className = 'w-2 h-2 bg-slate-400 rounded-full'; text.innerText = 'Browser Storage Mode'; }
         }
@@ -1053,6 +1147,18 @@
                         </div>
 
                         <button onclick="saveSettings()" class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-soft">Save Settings</button>
+
+                        <div class="border-t border-slate-200 dark:border-slate-700 pt-6">
+                            <h3 class="text-sm font-semibold text-slate-500 uppercase mb-3">Data Management</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    Import Database (Merge)
+                                    <input type="file" accept=".json" class="hidden" onchange="importDatabase(event)">
+                                </label>
+                                <p class="text-xs text-slate-400">Select a JSON file to merge clients into your database. Duplicate emails are automatically skipped. Existing data is never overwritten.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1318,7 +1424,7 @@
         }
 
         // ==========================================
-        // 10. BACKUP & INIT
+        // 10. BACKUP, IMPORT & INIT
         // ==========================================
         function downloadBackup() {
             const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
@@ -1330,6 +1436,154 @@
             if (confirm("Restoring will OVERWRITE all current data. Are you sure?")) {
                 const text = await file.text(); DB = JSON.parse(text); migrateDB(); await saveDB(); showToast("Backup restored successfully!"); applyThemeAndColors(); renderApp();
             }
+            event.target.value = '';
+        }
+
+        // ==========================================
+        // IMPORT DATABASE (Merge feature)
+        // ==========================================
+        // Merges clients from an external JSON file into the current database.
+        // - Does NOT overwrite existing data
+        // - Prevents duplicate entries (checked by email)
+        // - Automatically saves everything back into crm-database.json
+        async function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const importedData = JSON.parse(text);
+
+                // Determine the clients array from various possible formats
+                let importedClients = [];
+                let importedNiches = [];
+
+                if (Array.isArray(importedData)) {
+                    // Format 1: Simple array of client objects
+                    importedClients = importedData;
+                } else if (importedData.clients && Array.isArray(importedData.clients)) {
+                    // Format 2: Full database format (e.g., backup file, another crm-database.json)
+                    importedClients = importedData.clients;
+                    importedNiches = importedData.niches || [];
+                } else if (importedData.name || importedData.primary_email || importedData.email) {
+                    // Format 3: Single client object
+                    importedClients = [importedData];
+                } else {
+                    showToast("Unrecognized file format. Expected JSON with clients array or single client object.", "error");
+                    event.target.value = '';
+                    return;
+                }
+
+                // Build a set of existing emails for duplicate detection
+                const existingEmails = new Set();
+                DB.clients.forEach(c => {
+                    if (c.primary_email) existingEmails.add(c.primary_email.toLowerCase().trim());
+                    if (c.additional_emails) {
+                        c.additional_emails.forEach(e => {
+                            if (typeof e === 'string') existingEmails.add(e.toLowerCase().trim());
+                        });
+                    }
+                });
+
+                // Track existing IDs to avoid conflicts
+                const existingIds = new Set(DB.clients.map(c => c.id));
+
+                let addedCount = 0;
+                let skippedCount = 0;
+                const baseId = Date.now();
+
+                importedClients.forEach(c => {
+                    // Skip invalid entries
+                    if (!c || (!c.primary_email && !c.email && !c.name)) {
+                        skippedCount++;
+                        return;
+                    }
+
+                    const primaryEmail = (c.primary_email || c.email || '').toLowerCase().trim();
+                    const additionalEmails = (c.additional_emails || [])
+                        .map(e => typeof e === 'string' ? e.toLowerCase().trim() : '')
+                        .filter(Boolean);
+                    const allEmails = [primaryEmail, ...additionalEmails].filter(Boolean);
+
+                    // Check for duplicates by email
+                    const isDuplicate = allEmails.length > 0 && allEmails.some(e => existingEmails.has(e));
+
+                    if (isDuplicate) {
+                        skippedCount++;
+                    } else {
+                        // Add new emails to the existing set
+                        allEmails.forEach(e => existingEmails.add(e));
+
+                        // Generate a unique ID that doesn't conflict with existing IDs
+                        let newId = c.id || (baseId + addedCount);
+                        while (existingIds.has(newId)) {
+                            newId = baseId + addedCount + Math.floor(Math.random() * 100000);
+                        }
+                        existingIds.add(newId);
+
+                        // Create the migrated client object
+                        const newClient = {
+                            id: newId,
+                            name: c.name || 'Unknown',
+                            business_name: c.business_name || c.businessName || '',
+                            primary_email: c.primary_email || c.email || '',
+                            additional_emails: c.additional_emails || [],
+                            location: c.location || '',
+                            website: c.website || '',
+                            business_niche: c.business_niche || c.businessNiche || c.categories || '',
+                            tags: c.tags || [],
+                            notes: c.notes || [],
+                            attachments: c.attachments || [],
+                            status: c.status || 'LEAD',
+                            firstEmailDate: c.firstEmailDate || null,
+                            lastActivityDate: c.lastActivityDate || null,
+                            date_added: c.date_added || new Date().toISOString(),
+                            is_deleted: false,
+                            deleted_date: null
+                        };
+
+                        DB.clients.push(newClient);
+                        addedCount++;
+
+                        // Auto-create niche if it doesn't exist
+                        if (newClient.business_niche && !DB.niches.some(n => n.name === newClient.business_niche)) {
+                            DB.niches.push({
+                                id: 'niche_' + (baseId + addedCount + DB.niches.length),
+                                name: newClient.business_niche,
+                                is_deleted: false,
+                                deleted_date: null
+                            });
+                        }
+                    }
+                });
+
+                // Merge niches from imported data (if full database format)
+                importedNiches.forEach(n => {
+                    const nicheName = typeof n === 'string' ? n : (n.name || '');
+                    if (nicheName && !DB.niches.some(existing => existing.name === nicheName)) {
+                        DB.niches.push({
+                            id: 'niche_' + (baseId + DB.niches.length + 1),
+                            name: nicheName,
+                            is_deleted: false,
+                            deleted_date: null
+                        });
+                    }
+                });
+
+                // Save everything back to the database file
+                await saveDB();
+
+                logActivity('Database Imported', `Imported ${addedCount} clients, skipped ${skippedCount} duplicates from ${file.name}`);
+                showToast(`Import complete: ${addedCount} added, ${skippedCount} duplicates skipped`);
+                renderApp();
+
+            } catch (err) {
+                console.error("Import error:", err);
+                showToast("Error importing file: " + (err.message || "Unknown error"), "error");
+            }
+
+            // Reset the file input so the same file can be selected again later
+            event.target.value = '';
         }
 
         function initApp() {
