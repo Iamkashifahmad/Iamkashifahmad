@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColdMail CRM Pro</title>
+    <title>Dot | ColdMail CRM Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://media.licdn.com/dms/image/v2/D4D0BAQGReoFapfSZ2g/company-logo_100_100/company-logo_100_100/0/1683707555895?e=1786579200&v=beta&t=cBLuoJPUpC4_iEZe5Z8fEkkoy8eZlgfURGcB2UMTHdk">
     <style id="dynamic-colors">
         /* Default colors, will be overwritten by JS */
         :root {
@@ -81,8 +82,8 @@
         <aside class="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col flex-shrink-0 transition-colors duration-300">
             <div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center font-bold text-white">C</div>
-                    <span class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">ColdMail CRM</span>
+                    <div class="w-8 h-8 rounded-md flex items-center justify-center font-bold text-white"><img src="https://media.licdn.com/dms/image/v2/D4D0BAQGReoFapfSZ2g/company-logo_100_100/company-logo_100_100/0/1683707555895?e=1786579200&v=beta&t=cBLuoJPUpC4_iEZe5Z8fEkkoy8eZlgfURGcB2UMTHdk" alt="DOT" style="border-radius: 50%;"></div>
+                    <span class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">DOT - Mail CRM</span>
                 </div>
             </div>
             <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
