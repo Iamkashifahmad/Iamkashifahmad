@@ -31,6 +31,7 @@ I’m currently open to new projects and collaborations!
 
 - 💼 [Fiverr](https://fiverr.com/iamkashifahmad)
 - 💻 [Upwork](https://www.upwork.com/freelancers/kashifahmad)
+- 🌐 [Website](https://www.iamkashifahmad.com)
 - 🌐 [Portfolio](https://www.behance.net/iamkashifahmad)
 - 📧 Email: [iamkashifahmad@gmail.com](mailto:iamkashifahmad@gmail.com)
 - 🔗 [LinkedIn](https://www.linkedin.com/in/iamkashifahmad/)
