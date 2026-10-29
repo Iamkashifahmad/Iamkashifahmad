@@ -30,7 +30,7 @@ Welcome to my GitHub! I'm a passionate and experienced **Web Developer** with ov
 I’m currently open to new projects and collaborations!
 
 - 💼 [Fiverr](https://fiverr.com/iamkashifahmad)
-- 💻 [Upwork](https://www.upwork.com/freelancers/kashifahmad)
+- 💻 [Upwork](https://www.upwork.com/freelancers/~0134d0568a9472b8e3)
 - 🌐 [Website](https://www.iamkashifahmad.com)
 - 🌐 [Portfolio](https://www.behance.net/iamkashifahmad)
 - 📧 Email: [iamkashifahmad@gmail.com](mailto:iamkashifahmad@gmail.com)
